@@ -128,7 +128,6 @@ fn parse_format(format: String) -> Vec<Splits> {
     a = split_keep(&a, Control::Html);
     a = split_keep(&a, Control::Attrs);
     let mut out = Vec::new();
-    println!("{:?}", a);
     for split in a {
         if let Splits::Text(text) = split {
             out.push(Splits::Text(
