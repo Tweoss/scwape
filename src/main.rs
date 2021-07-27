@@ -1,4 +1,4 @@
-use clap::{AppSettings, Clap};
+use clap::{Clap};
 use colored::Colorize;
 use scraper::{Html, Selector};
 use snailquote::unescape;
