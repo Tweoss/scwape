@@ -1,7 +1,14 @@
 [package]
 name = "scrap"
 version = "0.1.0"
-authors = ["Francis Chua <francis@opennetworking.org>"]
+authors = ["Francis Chua <hwymonkey@gmail.com>"]
+license = "MIT"
+description = "A tool to scrape the web via CSS selectors"
+readme = "README.md"
+homepage = "https://github.com/tweoss/scraper"
+repository = "https://github.com/tweoss/scraper"
+keywords = ["cli", "search", "scrape"]
+categories = ["command-line-utilities"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
