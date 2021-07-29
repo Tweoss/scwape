@@ -20,7 +20,7 @@ pub struct Opts {
     pub url_or_file: String,
     /// The CSS Selector to find elements
     /// There can be multiple selectors, e.g. -s div.foo -s div.bar -s #baz
-    #[clap(short, long, min_values = 1)]
+    #[clap(short, long)]
     pub selector: Vec<String>,
     #[clap(short, long, long_about=FORMAT_ABOUT_STRING)]
     pub format: Option<Vec<String>>,

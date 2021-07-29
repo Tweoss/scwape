@@ -44,24 +44,35 @@ impl fmt::Display for Control {
 /// async due to reqwest
 #[tokio::main]
 async fn main() {
+    if let Err(err) = run().await {
+        println!("{}", err.red());
+    }
+}
+
+/// Run the logic, returning error if any fails
+async fn run() -> Result<(), String> {
     let opts: Opts = Opts::parse();
+
+    if opts.selector.is_empty() {
+        return Err("Specify at least one selector via the -s argument. See --help for more information.".to_string());
+    }
+
     let url_or_file = opts.url_or_file.clone();
-    let body = if url_or_file.starts_with("http") || url_or_file.starts_with("https") {
-        let resp = reqwest::get(opts.url_or_file.clone()).await.unwrap();
+    let body = if url_or_file.starts_with("http") {
+        let resp = if let Ok(r) = reqwest::get(opts.url_or_file.clone()).await {
+            r
+        } else {
+            return Err("Failed to get url: ".to_string() + &opts.url_or_file + " Url may be invalid. ");
+        };
         if !resp.status().is_success() {
-            println!(
-                "{}",
-                ("Failed to fetch get html from url: ".to_string() + &opts.url_or_file).red()
-            );
-            return;
+            return Err("Failed to fetch get html from url: ".to_string() + &opts.url_or_file);
         }
 
         resp.text().await.unwrap()
     } else if let Ok(content) = fs::read_to_string(url_or_file) {
         content
     } else {
-        println!("Failed to read file at {}", opts.url_or_file);
-        return;
+        return Err("Failed to read file at ".to_string() + &opts.url_or_file);
     };
     // parses string of HTML as a document
     let fragment = Html::parse_document(&body);
@@ -79,18 +90,27 @@ async fn main() {
     if opts.disparate {
         for (i, select_opt) in opts.selector.iter().enumerate() {
             // parses based on a CSS selector
-            let selector = Selector::parse(&select_opt).unwrap();
+            let selector = if let Ok(s) = Selector::parse(&select_opt) {
+                s
+            } else {
+                return Err("Failed to parse selector: ".to_string() + &select_opt);
+            };
             let selection = fragment.select(&selector).collect::<Vec<_>>();
             for e in selection {
                 print_element(e, &format_vec[i]);
             }
         }
+        Ok(())
     } else {
         let containing_selector = opts.selector.join(",");
-        let selector = Selector::parse(&containing_selector).unwrap();
+        let selector = if let Ok(s) = Selector::parse(&containing_selector) {
+            s
+        } else {
+            return Err("Failed to parse CSS selector: ".to_string() + &containing_selector);
+        };
         let selection = fragment.select(&selector).collect::<Vec<_>>();
         for element in selection.iter() {
-            // find the corresponding selector
+            // find the corresponding selector (each one should not return an error, since the containing selector did not)
             let index = opts
                 .selector
                 .iter()
@@ -98,6 +118,10 @@ async fn main() {
                 .unwrap();
             print_element(*element, &format_vec[index]);
         }
+        if selection.is_empty() {
+            return Err("No elements found for selector: \"".to_string() + &containing_selector + "\" in file or url: \"" + &opts.url_or_file + "\"");
+        }
+        Ok(())
     }
 }
 
