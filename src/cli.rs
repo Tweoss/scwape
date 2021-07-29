@@ -11,13 +11,13 @@ Example usage: \"\\id:\\t\\text\\n\" would result in the id, followed by a colon
 - \\attrs: The attributes of the element, printed out as a key: value comma-separated list 
 There can be multiple format specifiers." ;
 
-/// HTML scraper. Takes a target url, CSS selector(s), and optional format strings. 
+/// HTML scraper. Takes a target url or file, CSS selector(s), and optional format strings. 
 #[derive(Clap)]
 #[clap(version = "0.1", author = "Francis C.")]
 #[clap(setting = AppSettings::ColoredHelp)]
 pub struct Opts {
-    /// Target URL
-    pub url: String,
+    /// Target URL or file path.
+    pub url_or_file: String,
     /// The CSS Selector to find elements
     /// There can be multiple selectors, e.g. -s div.foo -s div.bar -s #baz
     #[clap(short, long, min_values = 1)]

@@ -1,8 +1,8 @@
-use clap::{Clap};
+use clap::Clap;
 use colored::Colorize;
 use scraper::{Html, Selector};
 use snailquote::unescape;
-use std::fmt;
+use std::{fmt, fs};
 
 mod cli;
 use cli::Opts;
@@ -45,15 +45,24 @@ impl fmt::Display for Control {
 #[tokio::main]
 async fn main() {
     let opts: Opts = Opts::parse();
-    let resp = reqwest::get(opts.url.clone()).await.unwrap();
-    if !resp.status().is_success() {
-        println!(
-            "{}",
-            ("Failed to fetch get html from url: ".to_string() + &opts.url).red()
-        );
-    }
+    let url_or_file = opts.url_or_file.clone();
+    let body = if url_or_file.starts_with("http") || url_or_file.starts_with("https") {
+        let resp = reqwest::get(opts.url_or_file.clone()).await.unwrap();
+        if !resp.status().is_success() {
+            println!(
+                "{}",
+                ("Failed to fetch get html from url: ".to_string() + &opts.url_or_file).red()
+            );
+            return;
+        }
 
-    let body = resp.text().await.unwrap();
+        resp.text().await.unwrap()
+    } else if let Ok(content) = fs::read_to_string(url_or_file) {
+        content
+    } else {
+        println!("Failed to read file at {}", opts.url_or_file);
+        return;
+    };
     // parses string of HTML as a document
     let fragment = Html::parse_document(&body);
 
@@ -95,8 +104,8 @@ async fn main() {
 /// split by control sequences, respecting escaped backslashes. keeps info on which sequence was used to delimit
 fn split_keep(splits: &[Splits], arg: Control) -> Vec<Splits> {
     let mut result = Vec::new();
-    let mut last = 0;
     for split in splits.iter() {
+        let mut last = 0;
         if let Splits::Text(text) = split {
             for (index, matched) in
                 text.match_indices(&("\\".to_string() + &arg.clone().to_string()))
@@ -110,7 +119,7 @@ fn split_keep(splits: &[Splits], arg: Control) -> Vec<Splits> {
                 }
             }
             if last < text.len() {
-                result.push(Splits::Text(text[last..].to_string()));
+                result.push(Splits::Text(text[last..text.len()].to_string()));
             }
         } else if let Splits::Control(control) = split {
             result.push(Splits::Control(*control));
@@ -154,22 +163,27 @@ fn print_element(element: scraper::ElementRef<'_>, format_vec: &[Splits]) {
                     print!("{}", element.value().name())
                 }
                 Control::Classes => {
-                    for class in element.value().classes() {
-                        print!("{},", class);
-                    }
+                    print!(
+                        "{}",
+                        element.value().classes().collect::<Vec<&str>>().join(",")
+                    );
                 }
                 Control::Text => {
-                    for text in element.text() {
-                        print!("{}", text);
-                    }
+                    print!("{}", element.text().collect::<Vec<&str>>().join(""));
                 }
                 Control::Html => {
                     print!("{}", element.html());
                 }
                 Control::Attrs => {
-                    for (key, value) in element.value().attrs() {
-                        print!("{}: {},", key, value);
-                    }
+                    print!(
+                        "{}",
+                        element
+                            .value()
+                            .attrs()
+                            .map(|(key, value)| format!("{}: {}", key, value))
+                            .collect::<Vec<String>>()
+                            .join(",")
+                    );
                 }
             }
         }
