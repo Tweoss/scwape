@@ -45,5 +45,5 @@ The possible format specifiers are
 The disparate `-d` option exists to allow for printing out each selector independently. The default behavior is to print the matching elements for all selectors in the order they appear. The disparate option would instead print the elements for the first selector, then the second, then the third and so on. 
     
 # Completions
-Fish and Bash shell completions are available on github and are generate upon cargo build. 
+Fish and Bash shell completions are available on github and are generated upon cargo build. 
 To generate your own, select the appropiate shell in `build.rs`, then run `cargo build`. The shell completion will be available in the completions directory. The list of available shells is at `https://docs.rs/clap/2.33.3/clap/enum.Shell.html`. 
