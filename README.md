@@ -46,4 +46,4 @@ The disparate `-d` option exists to allow for printing out each selector indepen
     
 # Completions
 Fish and Bash shell completions are available on github and are generated upon cargo build. 
-To generate your own, select the appropiate shell in `build.rs`, then run `cargo build`. The shell completion will be available in the completions directory. The list of available shells is at `https://docs.rs/clap/2.33.3/clap/enum.Shell.html`. 
+To generate your own, select the appropiate shell in `build.rs`, then run `cargo build`. The shell completion will be available in the completions directory. The list of available shells are in (clap's documentation)[https://docs.rs/clap/2.33.3/clap/enum.Shell.html]. 
